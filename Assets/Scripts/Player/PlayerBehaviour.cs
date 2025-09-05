@@ -7,26 +7,47 @@ public class PlayerBehaviour : MonoBehaviour
 {
     [Header("<color=#00541B>Animation</color>")]
     [SerializeField] private string _attackTriggerName = "onAttack";
+    [SerializeField] private string _fireTriggerName = "onFire";
     [SerializeField] private string _groundBoolName = "isGrounded";
     [SerializeField] private string _jumpTriggerName = "onJump";
+    [SerializeField] private string _moveBoolName = "isMoving";
+    [SerializeField] private string _throwTriggerName = "onThrow";
     [SerializeField] private string _xFloatName = "xAxis";
     [SerializeField] private string _zFloatName = "zAxis";
 
+    [Header("<color=#00541B>Combat</color>")]
+    [SerializeField] private float _attackDistance = 1.0f;
+    [SerializeField] private float _attackRadius = 0.25f;
+    [SerializeField] private int _baseDmg = 5;
+    [SerializeField] private LayerMask _entityMask;
+    [SerializeField] private float _grenadeDmgMult = 5.0f;
+    [SerializeField] private float _rangeDmgMult = 2.5f;
+
     [Header("<color=#00541B>Inputs</color>")]
     [SerializeField] private KeyCode _attackKey = KeyCode.Mouse0;
+    [SerializeField] private KeyCode _firekKey = KeyCode.Mouse1;
     [SerializeField] private KeyCode _jumpKey = KeyCode.Space;
+    [SerializeField] private KeyCode _throwKey = KeyCode.G;
 
     [Header("<color=#00541B>Physics</color>")]
+    [SerializeField] private float _groundDistance = 0.25f;
+    [SerializeField] private LayerMask _groundMask;
     [SerializeField] private float _jumpForce = 7.5f;
+    [SerializeField] private float _moveDistance = 0.625f;
+    [SerializeField] private LayerMask _moveMask;
     [SerializeField] private float _moveSpeed = 3.5f;
 
     private Animator _animator;
+    private PlayerAvatar _avatar;
     private Rigidbody _rb;
 
     private bool _isGrounded = true;
 
+    private Ray _attackRay, _groundRay, _moveRay;
+    private RaycastHit _combatHit;
+
     private Vector2 _moveInputs = new();
-    private Vector3 _moveDir = new();
+    private Vector3 _attackOffset = new(), _moveDir = new(), _moveRayDir = new(), _transformOffset = new();
 
     private void Awake()
     {
@@ -38,16 +59,25 @@ public class PlayerBehaviour : MonoBehaviour
     private void Start()
     {
         _animator = GetComponentInChildren<Animator>();
+        _avatar = GetComponentInChildren<PlayerAvatar>();
     }
 
     private void Update()
     {
+        _transformOffset = transform.position;
+        _transformOffset.y += 0.1f;
+
+        _isGrounded = IsGrounded();
+
+        _animator.SetLayerWeight(1, _avatar.legsLayerWeight);
+
         _moveInputs.x = Input.GetAxis("Horizontal");
         _animator.SetFloat(_xFloatName, _moveInputs.x);
         _moveInputs.y = Input.GetAxis("Vertical");
         _animator.SetFloat(_zFloatName, _moveInputs.y);
 
         _animator.SetBool(_groundBoolName, _isGrounded);
+        _animator.SetBool(_moveBoolName, _moveInputs.sqrMagnitude != 0.0f);
 
         if (Input.GetKeyDown(_jumpKey))
         {
@@ -58,11 +88,19 @@ public class PlayerBehaviour : MonoBehaviour
         {
             _animator.SetTrigger(_attackTriggerName);
         }
+        else if (Input.GetKeyDown(_firekKey))
+        {
+            _animator.SetTrigger(_fireTriggerName);
+        }
+        else if (Input.GetKeyDown(_throwKey))
+        {
+            _animator.SetTrigger(_throwTriggerName);
+        }
     }
 
     private void FixedUpdate()
     {
-        if(_moveInputs.sqrMagnitude != 0.0f)
+        if(_moveInputs.sqrMagnitude != 0.0f && !IsBlocked(_moveInputs))
         {
             Movement(_moveInputs);
         }
@@ -70,7 +108,36 @@ public class PlayerBehaviour : MonoBehaviour
 
     public void Attack()
     {
-        Debug.Log($"<color=#00541B>Big Smoke</color>: YOU PICKED THE WRONG HOUSE, FOOL!");
+        _attackOffset = transform.position;
+        _attackOffset.y += 1.5f;
+
+        _attackRay = new Ray(_attackOffset, transform.forward);
+
+        if(Physics.SphereCast(_attackRay, _attackRadius, out _combatHit, _attackDistance, _entityMask))
+        {
+            if(_combatHit.collider.TryGetComponent(out IDamage damage))
+            {
+                Debug.Log($"<color=#00541B>Big Smoke</color>: YOU PICKED THE WRONG HOUSE, FOOL!");
+
+                damage.TakeDamage(_baseDmg);
+            }
+        }
+    }
+
+    private bool IsBlocked(Vector2 input)
+    {
+        _moveRayDir = (transform.right * input.x + transform.forward * input.y);
+
+        _moveRay = new Ray(_transformOffset, _moveRayDir);
+
+        return Physics.Raycast(_moveRay, _moveDistance, _moveMask);
+    }
+
+    private bool IsGrounded()
+    {
+        _groundRay = new Ray(_transformOffset, -transform.up);
+
+        return Physics.Raycast(_groundRay, _groundDistance, _groundMask);
     }
 
     public void Jump()
@@ -85,19 +152,16 @@ public class PlayerBehaviour : MonoBehaviour
         _rb.MovePosition(transform.position + _moveDir * _moveSpeed * Time.fixedDeltaTime);
     }
 
-    private void OnCollisionEnter(Collision collision)
+    private void OnDrawGizmos()
     {
-        if(collision.gameObject.layer == 30)
+        if (_isGrounded)
         {
-            _isGrounded = true;
+            Gizmos.color = Color.green;
         }
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.layer == 30)
+        else
         {
-            _isGrounded = false;
+            Gizmos.color = Color.red;
         }
+        Gizmos.DrawRay(_groundRay.origin, _groundRay.direction * _groundDistance);
     }
 }

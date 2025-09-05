@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerAvatar : MonoBehaviour
 {
+    public float legsLayerWeight = 0.0f;
+
     private PlayerBehaviour _parent;
 
     private void Start()
@@ -20,4 +22,9 @@ public class PlayerAvatar : MonoBehaviour
     {
         _parent.Jump();
     }
+
+    //public void SetLegsLayerWeight(float value)
+    //{
+    //    _parent.SetLegsLayerWeight(value);
+    //}
 }
