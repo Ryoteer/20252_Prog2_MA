@@ -623,6 +623,9 @@ MonoBehaviour:
   _entityMask:
     serializedVersion: 2
     m_Bits: 64
+  _fireDistance: 25
+  _fireDmgMult: 2
+  _fireOrigin: {fileID: 5675635809012600182}
   _grenadeDmgMult: 5
   _rangeDmgMult: 2.5
   _attackKey: 323

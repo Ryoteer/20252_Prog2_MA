@@ -20,8 +20,12 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] private float _attackRadius = 0.25f;
     [SerializeField] private int _baseDmg = 5;
     [SerializeField] private LayerMask _entityMask;
-    [SerializeField] private float _grenadeDmgMult = 5.0f;
-    [SerializeField] private float _rangeDmgMult = 2.5f;
+    [SerializeField] private float _fireDistance = 25.0f;
+    [SerializeField] private int _fireDmgMult = 2;
+    [SerializeField] private Transform _fireOrigin;
+    [SerializeField] private float _grenadeDistance = 10.0f;
+    [SerializeField] private float _grenadeRadius = 2.0f;
+    [SerializeField] private int _grenadeDmgMult = 5;
 
     [Header("<color=#00541B>Inputs</color>")]
     [SerializeField] private KeyCode _attackKey = KeyCode.Mouse0;
@@ -38,12 +42,14 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] private float _moveSpeed = 3.5f;
 
     private Animator _animator;
+    private Collider[] _grenadeHits;
     private PlayerAvatar _avatar;
     private Rigidbody _rb;
 
     private bool _isGrounded = true;
 
     private Ray _attackRay, _groundRay, _moveRay;
+    private RaycastHit[] _combatHits;
     private RaycastHit _combatHit;
 
     private Vector2 _moveInputs = new();
@@ -120,6 +126,37 @@ public class PlayerBehaviour : MonoBehaviour
                 Debug.Log($"<color=#00541B>Big Smoke</color>: YOU PICKED THE WRONG HOUSE, FOOL!");
 
                 damage.TakeDamage(_baseDmg);
+            }
+        }
+    }
+
+    public void Fire()
+    {
+        _attackRay = new Ray(_fireOrigin.position, transform.forward);
+
+        _combatHits = Physics.RaycastAll(_attackRay, _fireDistance, _entityMask);
+
+        foreach(RaycastHit hit in _combatHits)
+        {
+            if(hit.collider.TryGetComponent(out IDamage damage))
+            {
+                damage.TakeDamage(_baseDmg * _fireDmgMult);
+            }
+        }
+    }
+
+    public void Grenade()
+    {
+        _attackOffset = transform.position;
+        _attackOffset.z += _grenadeDistance;
+
+        _grenadeHits = Physics.OverlapSphere(_attackOffset, _grenadeRadius, _entityMask);
+
+        foreach(Collider hit in _grenadeHits)
+        {
+            if(hit.TryGetComponent(out IDamage damage))
+            {
+                damage.TakeDamage(_baseDmg * _grenadeDmgMult);
             }
         }
     }

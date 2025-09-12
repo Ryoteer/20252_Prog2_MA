@@ -18,6 +18,16 @@ public class PlayerAvatar : MonoBehaviour
         _parent.Attack();
     }
 
+    public void Fire()
+    {
+        _parent.Fire();
+    }
+
+    public void Grenade()
+    {
+        _parent.Invoke("Grenade", 4.0f);
+    }
+
     public void Jump()
     {
         _parent.Jump();
