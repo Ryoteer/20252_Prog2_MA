@@ -45,6 +45,8 @@ public class PlayerBehaviour : MonoBehaviour
     private Collider[] _grenadeHits;
     private PlayerAvatar _avatar;
     private Rigidbody _rb;
+    private Transform _camTransform;
+    private ThirdPersonCamera _springArm;
 
     private bool _isGrounded = true;
 
@@ -53,7 +55,7 @@ public class PlayerBehaviour : MonoBehaviour
     private RaycastHit _combatHit;
 
     private Vector2 _moveInputs = new();
-    private Vector3 _attackOffset = new(), _moveDir = new(), _moveRayDir = new(), _transformOffset = new();
+    private Vector3 _attackOffset = new(), _camForwardFix = new(), _camRightFix = new(), _moveDir = new(), _moveRayDir = new(), _transformOffset = new();
 
     private void Awake()
     {
@@ -66,6 +68,8 @@ public class PlayerBehaviour : MonoBehaviour
     {
         _animator = GetComponentInChildren<Animator>();
         _avatar = GetComponentInChildren<PlayerAvatar>();
+        _camTransform = Camera.main.transform;
+        _springArm = Camera.main.GetComponentInParent<ThirdPersonCamera>();
     }
 
     private void Update()
@@ -184,9 +188,21 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void Movement(Vector2 input)
     {
-        _moveDir = (transform.right * input.x + transform.forward * input.y).normalized;
+        _camForwardFix = _camTransform.forward;
+        _camForwardFix.y = 0.0f;
+        _camRightFix = _camTransform.right;
+        _camRightFix.y = 0.0f;
+
+        Rotate(_camForwardFix);
+
+        _moveDir = (_camRightFix * input.x + _camForwardFix * input.y).normalized;
 
         _rb.MovePosition(transform.position + _moveDir * _moveSpeed * Time.fixedDeltaTime);
+    }
+
+    private void Rotate(Vector3 forward)
+    {
+        transform.forward = forward;
     }
 
     private void OnDrawGizmos()
