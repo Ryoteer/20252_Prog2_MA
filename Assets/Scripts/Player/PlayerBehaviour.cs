@@ -59,6 +59,8 @@ public class PlayerBehaviour : MonoBehaviour
 
     private void Awake()
     {
+        GameManager.Instance.Player = this;
+
         _rb = GetComponent<Rigidbody>();
         //_rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         _rb.constraints = RigidbodyConstraints.FreezeRotation;

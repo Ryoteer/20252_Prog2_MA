@@ -7,7 +7,6 @@ using UnityEngine.AI;
 public class EnemyBehaviour : MonoBehaviour, IDamage
 {
     [Header("<color=#374A5D>AI</color>")]
-    [SerializeField] private Transform[] _patrolNodes;
     [SerializeField] private float _attackDistance = 3.0f;
     [SerializeField] private float _chaseDistance = 8.5f;
     [SerializeField] private float _partolSpeedMult = 1.0f;
@@ -21,7 +20,6 @@ public class EnemyBehaviour : MonoBehaviour, IDamage
     [SerializeField] private string _patrolBoolName = "isPatrolling";
 
     [Header("<color=#374A5D>Behaviours</color>")]
-    [SerializeField] private PlayerBehaviour _player;
     [SerializeField] private int _maxHP = 20;
 
     private int _actualHP = 0;
@@ -30,8 +28,10 @@ public class EnemyBehaviour : MonoBehaviour, IDamage
     private Animator _animator;
     private Collider _collider;
     private NavMeshAgent _agent;
+    private PlayerBehaviour _player;
     private Rigidbody _rb;
     private Transform _actualNode;
+    private List<Transform> _patrolNodes = new();
 
     private void Awake()
     {
@@ -49,12 +49,13 @@ public class EnemyBehaviour : MonoBehaviour, IDamage
 
     private void Start()
     {
+        _player = GameManager.Instance.Player;
+        _patrolNodes = GameManager.Instance.AgentPatrolNodes;
+
         _animator = GetComponentInChildren<Animator>();
 
-        _actualNode = SelectPatrolNode();
-
+        _actualNode = _patrolNodes[Random.Range(0, _patrolNodes.Count)];
         _agent.SetDestination(_actualNode.position);
-
         _animator.SetBool(_patrolBoolName, true);
     }
 
@@ -108,15 +109,15 @@ public class EnemyBehaviour : MonoBehaviour, IDamage
     {
         if (!prevNode)
         {
-            return _patrolNodes[Random.Range(0, _patrolNodes.Length)];
+            return _patrolNodes[Random.Range(0, _patrolNodes.Count)];
         }
         else
         {
-            Transform newNode = _patrolNodes[Random.Range(0, _patrolNodes.Length)];
+            Transform newNode = _patrolNodes[Random.Range(0, _patrolNodes.Count)];
 
             while (prevNode == newNode)
             {
-                newNode = _patrolNodes[Random.Range(0, _patrolNodes.Length)];
+                newNode = _patrolNodes[Random.Range(0, _patrolNodes.Count)];
             }
 
             return newNode;
