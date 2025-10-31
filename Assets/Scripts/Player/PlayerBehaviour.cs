@@ -15,6 +15,14 @@ public class PlayerBehaviour : MonoBehaviour
     [SerializeField] private string _xFloatName = "xAxis";
     [SerializeField] private string _zFloatName = "zAxis";
 
+    [Header("<color=#00541B>Audio</color>")]
+    [SerializeField] private AudioSource _actionsSource;
+    [SerializeField] private AudioClip[] _attackClips;
+    [SerializeField] private AudioClip[] _hurtClips;
+    [SerializeField] private AudioSource _movementSource;
+    [SerializeField] private AudioClip[] _moveClips;
+    [SerializeField] private AudioClip[] _jumpClips;
+
     [Header("<color=#00541B>Combat</color>")]
     [SerializeField] private float _attackDistance = 1.0f;
     [SerializeField] private float _attackRadius = 0.25f;
@@ -186,6 +194,36 @@ public class PlayerBehaviour : MonoBehaviour
     public void Jump()
     {
         _rb.AddForce(transform.up * _jumpForce, ForceMode.Impulse);
+    }
+
+    public void PlayAttackClip()
+    {
+        if(_actionsSource.isPlaying) _actionsSource.Stop();
+
+        _actionsSource.clip = _attackClips[Random.Range(0, _attackClips.Length)];
+
+        _actionsSource.Play();
+    }
+
+    public void PlayJumpClip(int state)
+    {
+        if(_movementSource.isPlaying) _movementSource.Stop();
+
+        if (state < 0) state = 0;
+        else if (state >= _jumpClips.Length) state = _jumpClips.Length - 1;
+
+        _movementSource.clip = _jumpClips[state];
+
+        _movementSource.Play();
+    }
+
+    public void PlayMoveClip()
+    {
+        if (_movementSource.isPlaying) _movementSource.Stop();
+
+        _movementSource.clip = _moveClips[Random.Range(0, _moveClips.Length)];
+
+        _movementSource.Play();
     }
 
     private void Movement(Vector2 input)

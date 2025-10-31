@@ -33,6 +33,21 @@ public class PlayerAvatar : MonoBehaviour
         _parent.Jump();
     }
 
+    public void PlayAttackClip()
+    {
+        _parent.PlayAttackClip();
+    }
+
+    public void PlayJumpClip(int state)
+    {
+        _parent.PlayJumpClip(state);
+    }
+
+    public void PlayMoveClip()
+    {
+        _parent.PlayMoveClip();
+    }
+
     //public void SetLegsLayerWeight(float value)
     //{
     //    _parent.SetLegsLayerWeight(value);
